@@ -1,0 +1,77 @@
+# 小红书自动化系统配置文件
+
+[xiaohongshu]
+# ===== 目标设置 =====
+# 每天目标回复数（建议 3-5）
+target_daily_replies = 5
+
+# 最大回复数（建议不超过 10）
+max_daily_replies = 10
+
+# 工作时间（避免深夜活跃，模拟人类作息）
+working_hours_start = 9  # 9:00
+working_hours_end = 22   # 22:00
+
+# ===== 内容质量 =====
+# 最小相关性评分（0-1）
+min_relevance_score = 0.7
+
+# 最小吸引力评分（0-1）
+min_attractiveness_score = 0.6
+
+# 是否需要人工审核（Level 2: true, Level 3: false）
+require_human_review = true
+
+# ===== 安全设置 =====
+# 启用安全限制
+enable_safety_limits = true
+
+# 随机延迟范围（秒）
+random_delay_min = 300   # 5 分钟
+random_delay_max = 900   # 15 分钟
+
+# ===== 行为模拟 =====
+# 模拟人类打字速度（逐字符输入，随机延迟）
+simulate_human_typing = true
+
+# 模拟阅读停顿（随机思考时间）
+simulate_reading = true
+
+# 随机鼠标移动
+random_mouse_movement = true
+
+# 打字速度变化幅度（0-1，越大越不稳定）
+typing_speed_variance = 0.3
+
+# ===== 数据保存 =====
+# 保存分析报告
+save_analysis_report = true
+
+# 保存生成的内容
+save_generated_content = true
+
+# 保存回复日志
+save_reply_logs = true
+
+# ===== URL 配置 =====
+# 小红书主页
+xiaohongshu_base_url = "https://www.xiaohongshu.com"
+
+# 探索页（热点来源）
+hot_topic_url = "https://www.xiaohongshu.com/explore"
+
+# ===== 工作空间路径 =====
+# 工作空间根目录
+workspace_root = "workspace/xiaohongshu"
+
+# 热点数据目录
+hot_topics_dir = "workspace/xiaohongshu/hot_topics"
+
+# 分析结果目录
+analysis_dir = "workspace/xiaohongshu/analysis"
+
+# 生成内容目录
+content_dir = "workspace/xiaohongshu/generated_content"
+
+# 日志目录
+logs_dir = "workspace/xiaohongshu/logs"

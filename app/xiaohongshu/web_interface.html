@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小红书自动化系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ff2442;
+            --secondary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), #ff6b6b);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.idle { background: #6c757d; }
+        .status-dot.running { background: #0d6efd; }
+        .status-dot.completed { background: #198754; }
+        .status-dot.error { background: #dc3545; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .nav-tabs {
+            padding: 0 30px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 500;
+            padding: 15px 25px;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            background: transparent;
+        }
+
+        .tab-content {
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h5 {
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #ff6b6b);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #e6203c, #ff5252);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 36, 66, 0.3);
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+        }
+
+        .log-entry.info { color: #4fc3f7; }
+        .log-entry.success { color: #81c784; }
+        .log-entry.warning { color: #ffb74d; }
+        .log-entry.error { color: #e57373; }
+
+        .progress {
+            height: 25px;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary-color), #ff6b6b);
+            font-weight: 600;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-card .label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .data-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .data-card h6 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .badge-priority {
+            font-size: 0.85rem;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- 头部 -->
+            <div class="header">
+                <h1><i class="bi bi-robot"></i> 小红书自动化系统</h1>
+                <div class="subtitle">热点挖掘 · 需求分析 · 智能回复</div>
+            </div>
+
+            <!-- 状态栏 -->
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">系统就绪</span>
+                </div>
+                <div>
+                    <span class="text-muted">当前步骤：</span>
+                    <span class="fw-bold" id="currentStep">-</span>
+                </div>
+            </div>
+
+            <!-- 导航标签 -->
+            <ul class="nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#control-panel">
+                        <i class="bi bi-gear"></i> 控制面板
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#config">
+                        <i class="bi bi-sliders"></i> 系统配置
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#logs">
+                        <i class="bi bi-terminal"></i> 实时日志
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data">
+                        <i class="bi bi-database"></i> 数据查看
+                    </button>
+                </li>
+            </ul>
+
+            <!-- 标签内容 -->
+            <div class="tab-content">
+                <!-- 控制面板 -->
+                <div class="tab-pane fade show active" id="control-panel">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="number" id="statCollected">0</div>
+                                <div class="label">收集热点</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="number" id="statAnalyzed">0</div>
+                                <div class="label">分析话题</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="number" id="statGenerated">0</div>
+                                <div class="label">生成回复</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="number" id="statSent">0</div>
+                                <div class="label">发送成功</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h5><i class="bi bi-play-circle"></i> 启动任务</h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">运行模式</label>
+                                <select class="form-select" id="taskMode">
+                                    <option value="full">完整工作流（推荐）</option>
+                                    <option value="collect">仅收集热点</option>
+                                    <option value="analyze">收集并分析</option>
+                                    <option value="generate">生成回复（不发送）</option>
+                                    <option value="single">处理单个帖子</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">收集热点数</label>
+                                <input type="number" class="form-control" id="maxTopics" value="20" min="5" max="50">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">回复数量</label>
+                                <input type="number" class="form-control" id="maxReplies" value="5" min="1" max="20">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3" id="singleUrlRow" style="display: none;">
+                            <div class="col-md-12">
+                                <label class="form-label">帖子链接</label>
+                                <input type="text" class="form-control" id="postUrl" placeholder="https://www.xiaohongshu.com/...">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="autoSend">
+                                    <label class="form-check-label" for="autoSend">
+                                        <strong class="text-danger">自动发送回复（Level 3，谨慎使用）</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" id="btnStart">
+                                <i class="bi bi-play-fill"></i> 启动任务
+                            </button>
+                            <button class="btn btn-danger" id="btnStop" disabled>
+                                <i class="bi bi-stop-fill"></i> 停止任务
+                            </button>
+                        </div>
+
+                        <div class="mt-3" id="progressContainer" style="display: none;">
+                            <label class="form-label">任务进度</label>
+                            <div class="progress">
+                                <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%">0%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>提示：</strong>首次运行建议使用"仅收集热点"模式测试，确认系统正常后再使用完整工作流。
+                    </div>
+                </div>
+
+                <!-- 系统配置 -->
+                <div class="tab-pane fade" id="config">
+                    <!-- LLM 配置 -->
+                    <div class="form-section">
+                        <h5><i class="bi bi-cpu"></i> LLM API 配置</h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">模型</label>
+                                <select class="form-select" id="llmModel">
+                                    <option value="gpt-4o">GPT-4o (推荐)</option>
+                                    <option value="gpt-4">GPT-4</option>
+                                    <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                                    <option value="claude-3-opus">Claude 3 Opus</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">API 地址</label>
+                                <input type="text" class="form-control" id="llmBaseUrl" placeholder="https://api.openai.com/v1" value="https://api.openai.com/v1">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">API Key</label>
+                            <input type="password" class="form-control" id="llmApiKey" placeholder="sk-...">
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">最大 Token</label>
+                                <input type="number" class="form-control" id="llmMaxTokens" value="4096">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Temperature</label>
+                                <input type="number" class="form-control" id="llmTemperature" value="0" step="0.1" min="0" max="2">
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" id="btnSaveLlm">
+                            <i class="bi bi-save"></i> 保存 LLM 配置
+                        </button>
+                    </div>
+
+                    <!-- 小红书配置 -->
+                    <div class="form-section">
+                        <h5><i class="bi bi-sliders"></i> 小红书配置</h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">每天目标回复数</label>
+                                <input type="number" class="form-control" id="targetReplies" value="5" min="1" max="20">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">最大回复数</label>
+                                <input type="number" class="form-control" id="maxRepliesConfig" value="10" min="1" max="30">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">最小相关性评分</label>
+                                <input type="number" class="form-control" id="minRelevance" value="0.7" step="0.1" min="0" max="1">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">工作开始时间</label>
+                                <input type="number" class="form-control" id="workStart" value="9" min="0" max="23">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">工作结束时间</label>
+                                <input type="number" class="form-control" id="workEnd" value="22" min="0" max="23">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="requireReview" checked>
+                                    <label class="form-check-label" for="requireReview">
+                                        需要人工审核
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">最小延迟（秒）</label>
+                                <input type="number" class="form-control" id="delayMin" value="300" min="60" max="3600">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">最大延迟（秒）</label>
+                                <input type="number" class="form-control" id="delayMax" value="900" min="60" max="7200">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="simulateTyping" checked>
+                                    <label class="form-check-label" for="simulateTyping">
+                                        模拟打字速度
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="simulateReading" checked>
+                                    <label class="form-check-label" for="simulateReading">
+                                        模拟阅读停顿
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="mouseMovement" checked>
+                                    <label class="form-check-label" for="mouseMovement">
+                                        随机鼠标移动
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" id="btnSaveXhs">
+                            <i class="bi bi-save"></i> 保存小红书配置
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 实时日志 -->
+                <div class="tab-pane fade" id="logs">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="bi bi-terminal"></i> 实时日志</h5>
+                        <button class="btn btn-outline-secondary btn-sm" id="btnClearLogs">
+                            <i class="bi bi-trash"></i> 清空日志
+                        </button>
+                    </div>
+                    <div class="log-container" id="logContainer">
+                        <div class="log-entry info">[系统] 等待连接...</div>
+                    </div>
+                </div>
+
+                <!-- 数据查看 -->
+                <div class="tab-pane fade" id="data">
+                    <div class="d-flex gap-2 mb-3">
+                        <button class="btn btn-outline-primary" id="btnLoadHotTopics">
+                            <i class="bi bi-download"></i> 刷新热点
+                        </button>
+                        <button class="btn btn-outline-success" id="btnLoadAnalysis">
+                            <i class="bi bi-graph-up"></i> 刷新分析
+                        </button>
+                        <button class="btn btn-outline-warning" id="btnLoadReplies">
+                            <i class="bi bi-chat-dots"></i> 刷新回复
+                        </button>
+                    </div>
+
+                    <div id="hotTopicsContainer">
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-info-circle"></i> 点击上方按钮加载数据
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============ WebSocket 连接 ============
+        let ws = null;
+        let reconnectTimer = null;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                addLog('info', 'WebSocket 连接成功');
+                clearInterval(reconnectTimer);
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'log') {
+                    addLog(data.data.level, data.data.message);
+                } else if (data.type === 'status') {
+                    updateStatus(data.data);
+                }
+            };
+
+            ws.onclose = () => {
+                addLog('warning', 'WebSocket 连接断开，5秒后重连...');
+                reconnectTimer = setInterval(connectWebSocket, 5000);
+            };
+
+            ws.onerror = (error) => {
+                addLog('error', 'WebSocket 错误');
+            };
+        }
+
+        // ============ 日志功能 ============
+        function addLog(level, message) {
+            const container = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${level}`;
+            entry.textContent = `[${time}] ${message}`;
+            container.appendChild(entry);
+
+            // 自动滚动到底部
+            container.scrollTop = container.scrollHeight;
+
+            // 限制日志条数
+            while (container.children.length > 500) {
+                container.removeChild(container.firstChild);
+            }
+        }
+
+        document.getElementById('btnClearLogs').addEventListener('click', () => {
+            document.getElementById('logContainer').innerHTML = '';
+        });
+
+        // ============ 状态更新 ============
+        function updateStatus(status) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const currentStep = document.getElementById('currentStep');
+            const progressBar = document.getElementById('progressBar');
+            const progressContainer = document.getElementById('progressContainer');
+
+            // 更新状态指示器
+            statusDot.className = `status-dot ${status.status}`;
+            statusText.textContent = getStatusText(status.status);
+            currentStep.textContent = status.current_step || '-';
+
+            // 更新进度条
+            if (status.progress > 0) {
+                progressContainer.style.display = 'block';
+                progressBar.style.width = `${status.progress}%`;
+                progressBar.textContent = `${status.progress}%`;
+            }
+
+            // 更新按钮状态
+            const btnStart = document.getElementById('btnStart');
+            const btnStop = document.getElementById('btnStop');
+
+            if (status.status === 'running') {
+                btnStart.disabled = true;
+                btnStop.disabled = false;
+            } else {
+                btnStart.disabled = false;
+                btnStop.disabled = true;
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'idle': '系统就绪',
+                'running': '运行中',
+                'paused': '已暂停',
+                'completed': '已完成',
+                'error': '出错'
+            };
+            return statusMap[status] || status;
+        }
+
+        // ============ 任务控制 ============
+        document.getElementById('taskMode').addEventListener('change', (e) => {
+            const singleUrlRow = document.getElementById('singleUrlRow');
+            singleUrlRow.style.display = e.target.value === 'single' ? 'block' : 'none';
+        });
+
+        document.getElementById('btnStart').addEventListener('click', async () => {
+            const mode = document.getElementById('taskMode').value;
+            const maxTopics = parseInt(document.getElementById('maxTopics').value);
+            const maxReplies = parseInt(document.getElementById('maxReplies').value);
+            const url = document.getElementById('postUrl').value;
+            const autoSend = document.getElementById('autoSend').checked;
+
+            const request = {
+                mode,
+                max_topics: maxTopics,
+                max_replies: maxReplies,
+                url: mode === 'single' ? url : null,
+                auto_send: autoSend
+            };
+
+            try {
+                addLog('info', '正在启动任务...');
+                const response = await fetch('/api/task/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addLog('success', result.message);
+                } else {
+                    addLog('error', result.message);
+                }
+            } catch (error) {
+                addLog('error', `启动失败: ${error.message}`);
+            }
+        });
+
+        document.getElementById('btnStop').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/task/stop', { method: 'POST' });
+                const result = await response.json();
+                addLog(result.success ? 'warning' : 'error', result.message);
+            } catch (error) {
+                addLog('error', `停止失败: ${error.message}`);
+            }
+        });
+
+        // ============ 配置保存 ============
+        document.getElementById('btnSaveLlm').addEventListener('click', async () => {
+            const config = {
+                model: document.getElementById('llmModel').value,
+                base_url: document.getElementById('llmBaseUrl').value,
+                api_key: document.getElementById('llmApiKey').value,
+                max_tokens: parseInt(document.getElementById('llmMaxTokens').value),
+                temperature: parseFloat(document.getElementById('llmTemperature').value)
+            };
+
+            try {
+                const response = await fetch('/api/config/llm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+                addLog(result.success ? 'success' : 'error', result.message);
+
+                if (result.success) {
+                    alert('LLM 配置保存成功！');
+                }
+            } catch (error) {
+                addLog('error', `保存失败: ${error.message}`);
+            }
+        });
+
+        document.getElementById('btnSaveXhs').addEventListener('click', async () => {
+            const config = {
+                target_daily_replies: parseInt(document.getElementById('targetReplies').value),
+                max_daily_replies: parseInt(document.getElementById('maxRepliesConfig').value),
+                working_hours_start: parseInt(document.getElementById('workStart').value),
+                working_hours_end: parseInt(document.getElementById('workEnd').value),
+                min_relevance_score: parseFloat(document.getElementById('minRelevance').value),
+                require_human_review: document.getElementById('requireReview').checked,
+                enable_safety_limits: true,
+                random_delay_min: parseInt(document.getElementById('delayMin').value),
+                random_delay_max: parseInt(document.getElementById('delayMax').value),
+                simulate_human_typing: document.getElementById('simulateTyping').checked,
+                simulate_reading: document.getElementById('simulateReading').checked,
+                random_mouse_movement: document.getElementById('mouseMovement').checked
+            };
+
+            try {
+                const response = await fetch('/api/config/xiaohongshu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+                addLog(result.success ? 'success' : 'error', result.message);
+
+                if (result.success) {
+                    alert('小红书配置保存成功！');
+                }
+            } catch (error) {
+                addLog('error', `保存失败: ${error.message}`);
+            }
+        });
+
+        // ============ 数据加载 ============
+        document.getElementById('btnLoadHotTopics').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/data/hot-topics');
+                const result = await response.json();
+
+                if (result.success) {
+                    displayHotTopics(result.data.topics);
+                } else {
+                    addLog('warning', result.message);
+                }
+            } catch (error) {
+                addLog('error', `加载失败: ${error.message}`);
+            }
+        });
+
+        function displayHotTopics(topics) {
+            const container = document.getElementById('hotTopicsContainer');
+
+            if (!topics || topics.length === 0) {
+                container.innerHTML = '<div class="alert alert-secondary">暂无热点数据</div>';
+                return;
+            }
+
+            let html = '';
+            topics.forEach((topic, index) => {
+                html += `
+                    <div class="data-card">
+                        <h6>${index + 1}. ${topic.title}</h6>
+                        <p class="text-muted small">${topic.content}</p>
+                        <div>
+                            <span class="badge bg-primary">👍 ${topic.likes}</span>
+                            <span class="badge bg-success">💬 ${topic.comments}</span>
+                            <span class="badge bg-warning">⭐ ${topic.collects}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            addLog('success', `加载了 ${topics.length} 个热点`);
+        }
+
+        document.getElementById('btnLoadAnalysis').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/data/analysis');
+                const result = await response.json();
+
+                if (result.success) {
+                    displayAnalysis(result.data.analyses);
+                } else {
+                    addLog('warning', result.message);
+                }
+            } catch (error) {
+                addLog('error', `加载失败: ${error.message}`);
+            }
+        });
+
+        function displayAnalysis(analyses) {
+            const container = document.getElementById('hotTopicsContainer');
+
+            if (!analyses || analyses.length === 0) {
+                container.innerHTML = '<div class="alert alert-secondary">暂无分析数据</div>';
+                return;
+            }
+
+            let html = '';
+            analyses.forEach((analysis, index) => {
+                html += `
+                    <div class="data-card">
+                        <h6>${index + 1}. ${analysis.topic.title}</h6>
+                        <p><strong>优先级:</strong> <span class="badge bg-danger">${analysis.priority.toFixed(1)}</span></p>
+                        <p><strong>用户痛点:</strong> ${analysis.pain_points.join(', ')}</p>
+                        <p><strong>商业价值:</strong> ${analysis.commercial_value.toFixed(1)}/10</p>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            addLog('success', `加载了 ${analyses.length} 个分析结果`);
+        }
+
+        document.getElementById('btnLoadReplies').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/data/replies');
+                const result = await response.json();
+
+                if (result.success) {
+                    displayReplies(result.data.content);
+                } else {
+                    addLog('warning', result.message);
+                }
+            } catch (error) {
+                addLog('error', `加载失败: ${error.message}`);
+            }
+        });
+
+        function displayReplies(content) {
+            const container = document.getElementById('hotTopicsContainer');
+
+            if (!content) {
+                container.innerHTML = '<div class="alert alert-secondary">暂无回复内容</div>';
+                return;
+            }
+
+            container.innerHTML = `<pre class="bg-light p-3 rounded">${content}</pre>`;
+            addLog('success', '加载了回复内容');
+        }
+
+        // ============ 加载配置 ============
+        async function loadConfigs() {
+            try {
+                // 加载 LLM 配置
+                const llmResponse = await fetch('/api/config/llm');
+                const llmResult = await llmResponse.json();
+                if (llmResult.success && llmResult.data) {
+                    const data = llmResult.data;
+                    document.getElementById('llmModel').value = data.model || 'gpt-4o';
+                    document.getElementById('llmBaseUrl').value = data.base_url || '';
+                    if (data.api_key && !data.api_key.includes('...')) {
+                        document.getElementById('llmApiKey').value = data.api_key;
+                    }
+                    document.getElementById('llmMaxTokens').value = data.max_tokens || 4096;
+                    document.getElementById('llmTemperature').value = data.temperature || 0;
+                }
+
+                // 加载小红书配置
+                const xhsResponse = await fetch('/api/config/xiaohongshu');
+                const xhsResult = await xhsResponse.json();
+                if (xhsResult.success && xhsResult.data) {
+                    const data = xhsResult.data;
+                    document.getElementById('targetReplies').value = data.target_daily_replies || 5;
+                    document.getElementById('maxRepliesConfig').value = data.max_daily_replies || 10;
+                    document.getElementById('minRelevance').value = data.min_relevance_score || 0.7;
+                    document.getElementById('workStart').value = data.working_hours_start || 9;
+                    document.getElementById('workEnd').value = data.working_hours_end || 22;
+                    document.getElementById('requireReview').checked = data.require_human_review !== false;
+                    document.getElementById('delayMin').value = data.random_delay_min || 300;
+                    document.getElementById('delayMax').value = data.random_delay_max || 900;
+                    document.getElementById('simulateTyping').checked = data.simulate_human_typing !== false;
+                    document.getElementById('simulateReading').checked = data.simulate_reading !== false;
+                    document.getElementById('mouseMovement').checked = data.random_mouse_movement !== false;
+                }
+            } catch (error) {
+                addLog('warning', `加载配置失败: ${error.message}`);
+            }
+        }
+
+        // ============ 初始化 ============
+        window.addEventListener('DOMContentLoaded', () => {
+            connectWebSocket();
+            loadConfigs();
+            addLog('success', '系统初始化完成');
+        });
+    </script>
+</body>
+</html>
